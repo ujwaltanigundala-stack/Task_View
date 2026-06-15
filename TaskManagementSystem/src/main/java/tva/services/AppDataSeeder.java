@@ -68,7 +68,7 @@ public class AppDataSeeder implements CommandLineRunner {
         insertRoleMapping(2, 5);
         insertRoleMapping(2, 6);
 
-        insertRoleMapping(3, 2);
+        
         insertRoleMapping(3, 3);
         insertRoleMapping(3, 4);
         insertRoleMapping(3, 5);
