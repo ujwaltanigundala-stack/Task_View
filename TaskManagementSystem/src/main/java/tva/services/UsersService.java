@@ -75,11 +75,12 @@ public class UsersService {
 
           if(role != null)
           {
+              Users U = (Users) UR.findByEmail(data.get("email").toString());
               response.put("code", 200);
 
               response.put(
                   "jwt",
-                  JWT.generateJWT(data.get("email"), role)
+                  JWT.generateJWT(data.get("email"), role, U.getId())
               );
 
               response.put(
@@ -117,41 +118,43 @@ public class UsersService {
     Map<String, Object> response = new HashMap<>();
     try
     {
-    Map<String, Object> payload = (Map<String, Object>) JWT.validateJWT(token);
-           String email = (String) payload.get("email");
-            Users U = (Users) UR.findByEmail(email);
-    List<Object> menuList = UR.getMenus(Long.valueOf(U.getRole()));
+      Map<String, Object> payload = (Map<String, Object>) JWT.validateJWT(token);
+      String email = (String) payload.get("email");
+      Users U = (Users) UR.findByEmail(email);
+      List<Object> menuList = UR.getMenus(Long.valueOf(U.getRole()));
   
-           response.put("code", 200);
-           response.put("fullname", U.getFullname());
-         response.put("menulist", menuList);
-    }catch(Exception e)
+      response.put("code", 200);
+      response.put("fullname", U.getFullname());
+      response.put("menulist", menuList);
+    }
+    catch(Exception e)
     {
       response.put("code", 500);
       response.put("message", e.getMessage());
     }
     return response;
   }
-  
+
   public Object getProfile(String token)
   {
     Map<String, Object> response = new HashMap<>();
     try
     {
       Map<String, Object> payload = (Map<String, Object>) JWT.validateJWT(token);
-          String email = (String) payload.get("email");
-          Object user = UR.profileByEmail(email);
+      String email = (String) payload.get("email");
+      Object user = UR.profileByEmail(email);
       
-          response.put("code", 200);
-          response.put("user", user);
-    }catch(Exception e)
+      response.put("code", 200);
+      response.put("user", user);
+    }
+    catch(Exception e)
     {
       response.put("code", 500);
       response.put("message", e.getMessage());
     }
     return response;
   }
-  
+
   public Object getAllUsers(int page, int size, String token)
   {
     Map<String, Object> response = new HashMap<>();
@@ -161,19 +164,20 @@ public class UsersService {
       Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").ascending());
       Page<Users> users = UR.findAll(pageable);
       
-          response.put("code", 200);
-          response.put("page", page);
-          response.put("size", size);
-          response.put("totalpages", users.getTotalPages());
-          response.put("users", users.getContent());
-    }catch(Exception e)
+      response.put("code", 200);
+      response.put("page", page);
+      response.put("size", size);
+      response.put("totalpages", users.getTotalPages());
+      response.put("users", users.getContent());
+    }
+    catch(Exception e)
     {
       response.put("code", 500);
       response.put("message", e.getMessage());
     }
     return response;
   }
-  
+
   public Object getUserById(Long id, String token)
   {
     Map<String, Object> response = new HashMap<>();
@@ -182,9 +186,10 @@ public class UsersService {
       JWT.validateJWT(token); //Authorization
       Users user = UR.findById(id).get();
       
-          response.put("code", 200);
-          response.put("user", user);
-    }catch(Exception e)
+      response.put("code", 200);
+      response.put("user", user);
+    }
+    catch(Exception e)
     {
       response.put("code", 500);
       response.put("message", e.getMessage());

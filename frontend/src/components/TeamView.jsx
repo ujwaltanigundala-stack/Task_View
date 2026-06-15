@@ -219,14 +219,15 @@ const TeamView = ({ logout }) => {
     }
 
     function openEdit(t) {
-        const id = t.id ?? t.taskId;
+        const id = t.id ?? t.taskId ?? t._id;
+        const taskUser = users.find(u => String(u.id) === String(t.assignedto)) || t.user;
         setEditTask({
             id,
             taskname: t.taskname ?? t.title ?? "",
             description: t.description ?? "",
             date: t.date ?? t.deadline ?? "",
-            userId: t.user?.id ?? t.user?.userId ?? "",
-            userEmail: t.user?.email ?? "",
+            userId: taskUser?.id ?? taskUser?.userId ?? "",
+            userEmail: taskUser?.email ?? "",
             status: String(t.status ?? 0)
         });
         setShowEdit(true);
@@ -377,63 +378,73 @@ const TeamView = ({ logout }) => {
                     <span>{taskCount} tasks</span>
                 </div>
 
-                {teams.map((item) => (
+                {teams.map((item) => {
+                    const memberIds = new Set(item.members.map(member => String(member.id || member.userId)));
+                    const teamTasks = tasks.filter(task => memberIds.has(String(task.assignedto)));
 
-                    <div className='team-block' key={item.team.teamId}>
+                    const statusGroups = {
+                        todo: teamTasks.filter(task => Number(task.status) === 0),
+                        inProgress: teamTasks.filter(task => Number(task.status) === 1),
+                        done: teamTasks.filter(task => Number(task.status) === 2)
+                    };
 
-                        <div className='team-title'>
-                            <strong>{item.team.teamName}</strong>
-                            <span>{item.members.length} members</span>
-                        </div>
+                    return (
+                        <div className='team-block' key={item.team.teamId}>
 
-                        <div className='team-members'>
-                            <div className='team-members-label'>Team members</div>
-                            {item.members.length > 0 ? (
-                                item.members.map((member) => (
-                                    <div key={member.id || member.userId} className='member-chip'>
-                                        {member.fullname ?? member.email}
-                                        {member.email ? ` (${member.email})` : ''}
-                                    </div>
-                                ))
-                            ) : (
-                                <div className='member-chip empty'>No members assigned yet</div>
-                            )}
-                        </div>
+                            <div className='team-title'>
+                                <strong>{item.team.teamName}</strong>
+                                <span>{item.members.length} members</span>
+                            </div>
 
-                        <div className='status-grid'>
+                            <div className='team-members'>
+                                <div className='team-members-label'>Team members</div>
+                                {item.members.length > 0 ? (
+                                    item.members.map((member) => (
+                                        <div key={member.id || member.userId} className='member-chip'>
+                                            {member.fullname ?? member.email}
+                                            {member.email ? ` (${member.email})` : ''}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className='member-chip empty'>No members assigned yet</div>
+                                )}
+                            </div>
 
-                            {Object.entries(statusLabels).map(([key, label]) => (
+                            <div className='status-grid'>
 
-                                <div className='status-column' key={key}>
+                                {Object.entries(statusLabels).map(([key, label]) => (
 
-                                    <h3>{label}</h3>
+                                    <div className='status-column' key={key}>
 
-                                    {(item.statusGroups[key] ?? []).map((task) => (
+                                        <h3>{label}</h3>
 
-                                                <div className='task-chip' key={task.taskId ?? task.id}>
+                                        {(statusGroups[key] ?? []).map((task) => {
+                                            const taskUser = users.find(u => String(u.id) === String(task.assignedto)) || task.user;
+                                            return (
+                                                <div className='task-chip' key={task.taskId ?? task.id ?? task._id}>
                                                     <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                                                         <b>{getTaskTitle(task)}</b>
                                                         <div>
                                                             {(roleId === 2 || roleId === 3) && (
                                                                 <button className='delete-btn' onClick={() => openEdit(task)} style={{marginRight:8}}>Update</button>
                                                             )}
-                                                            <button className='delete-btn' onClick={() => deleteTask(task.taskId ?? task.id)}>Delete</button>
+                                                            <button className='delete-btn' onClick={() => deleteTask(task.taskId ?? task.id ?? task._id)}>Delete</button>
                                                         </div>
                                                     </div>
-                                                    <span>{task.user?.fullname ?? "Unassigned"}</span>
+                                                    <span>{taskUser?.fullname ?? "Unassigned"}</span>
                                                 </div>
+                                            );
+                                        })}
 
-                                    ))}
+                                    </div>
 
-                                </div>
+                                ))}
 
-                            ))}
+                            </div>
 
                         </div>
-
-                    </div>
-
-                ))}
+                    );
+                })}
 
             </div>
 

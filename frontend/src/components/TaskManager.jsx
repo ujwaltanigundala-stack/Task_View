@@ -156,14 +156,15 @@ const TaskManager = ({ logout }) => {
     }
 
     function openEdit(t) {
-        const id = t.id ?? t.taskId;
+        const id = t.id ?? t.taskId ?? t._id;
+        const taskUser = users.find(u => String(u.id) === String(t.assignedto)) || t.user;
         setEditTask({
             id,
             taskname: t.taskname ?? t.title ?? "",
             description: t.description ?? "",
             date: t.date ?? t.deadline ?? "",
-            userId: t.user?.id ?? t.user?.userId ?? "",
-            userEmail: t.user?.email ?? "",
+            userId: taskUser?.id ?? taskUser?.userId ?? "",
+            userEmail: taskUser?.email ?? "",
             status: String(t.status ?? 0)
         });
         setShowEdit(true);
@@ -317,21 +318,24 @@ const TaskManager = ({ logout }) => {
                     </thead>
 
                     <tbody>
-                        {tasks.map((t) => (
-                            <tr key={t.id ?? t.taskId}>
-                                <td>{getTaskTitle(t)}</td>
-                                <td>{t.description}</td>
-                                <td>{t.date ?? t.deadline}</td>
-                                <td>{t.user?.fullname} ({t.user?.email})</td>
-                                <td>
-                                    {(roleId === 2 || roleId === 3) && (
-                                        <button className='delete-btn' onClick={() => openEdit(t)} style={{ marginRight: 8 }}>Update</button>
-                                    )}
+                        {tasks.map((t) => {
+                            const taskUser = users.find(u => String(u.id) === String(t.assignedto)) || t.user;
+                            return (
+                                <tr key={t.id ?? t.taskId ?? t._id}>
+                                    <td>{getTaskTitle(t)}</td>
+                                    <td>{t.description}</td>
+                                    <td>{t.date ?? t.deadline}</td>
+                                    <td>{taskUser ? `${taskUser.fullname} (${taskUser.email})` : ''}</td>
+                                    <td>
+                                        {(roleId === 2 || roleId === 3) && (
+                                            <button className='delete-btn' onClick={() => openEdit(t)} style={{ marginRight: 8 }}>Update</button>
+                                        )}
 
-                                    <button className='delete-btn' onClick={() => deleteTask(t.id ?? t.taskId)}>Delete</button>
-                                </td>
-                            </tr>
-                        ))}
+                                        <button className='delete-btn' onClick={() => deleteTask(t.id ?? t.taskId ?? t._id)}>Delete</button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

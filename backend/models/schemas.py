@@ -29,6 +29,7 @@ class TaskSchema(BaseModel):
     description: str
     date: str
     email: str
+    userid: Optional[int] = None
     status: Optional[int] = 0
 
 
